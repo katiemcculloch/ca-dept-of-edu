@@ -3,7 +3,6 @@ import sys
 from doltcli.utils import CREATE, UPDATE
 from memory_profiler import profile
 import requests
-# from bs4 import BeautifulSoup
 import doltcli
 from print import printWithFilename
 import static
@@ -16,10 +15,6 @@ def get_tablename_from_args():
         exit()
     tableName = sys.argv[1]
     return tableName
-
-# def get_content_from_url(tableName):    
-#     page = requests.get(static.absentee_urls[tableName])
-#     return BeautifulSoup(page.content, 'html.parser')
 
 def createTableIfDoesNotExist():
     lsOutput = db.ls()
