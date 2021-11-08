@@ -51,7 +51,8 @@ replaceKeywords = {
     "Eligible Cumulative Enrollment": "eligible_cumulative_enrollment",
 }
 
-absentee_urls = {
+table_url_map = {
     "absenteeism_chronic": "https://www.cde.ca.gov/ds/ad/filesabd.asp",
-    "absenteeism_reason": "https://www.cde.ca.gov/ds/ad/filesabr.asp"
+    "absenteeism_reason": "https://www.cde.ca.gov/ds/ad/filesabr.asp",
+    "census_day_enrollment": "https://www.cde.ca.gov/ds/ad/filesenr.asp",
 }

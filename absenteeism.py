@@ -3,10 +3,11 @@ import sys
 from doltcli.utils import CREATE, UPDATE
 from memory_profiler import profile
 import requests
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 import doltcli
 from print import printWithFilename
 import static
+from utils import get_content_from_url
 
 def get_tablename_from_args():
     args = sys.argv
@@ -16,9 +17,9 @@ def get_tablename_from_args():
     tableName = sys.argv[1]
     return tableName
 
-def get_content_from_url(tableName):    
-    page = requests.get(static.absentee_urls[tableName])
-    return BeautifulSoup(page.content, 'html.parser')
+# def get_content_from_url(tableName):    
+#     page = requests.get(static.absentee_urls[tableName])
+#     return BeautifulSoup(page.content, 'html.parser')
 
 def createTableIfDoesNotExist():
     lsOutput = db.ls()
@@ -141,8 +142,8 @@ def processURL(tableName, soup):
     return
 
 tableName = get_tablename_from_args()
-db = doltcli.Dolt("../../../dolt_repos/california-dept-of-education/")
-soup = get_content_from_url(tableName)
+db = doltcli.Dolt("../../dolt_repos/california-dept-of-education/")
+soup = get_content_from_url(static.table_url_map[tableName])
 print("Preparing import process for {}...".format(tableName))
 createTableIfDoesNotExist()
 processURL(tableName, soup)
