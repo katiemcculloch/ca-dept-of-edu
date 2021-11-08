@@ -1,22 +1,13 @@
 import csv
-import sys
-from doltcli.utils import CREATE, UPDATE
+from doltcli.utils import UPDATE
 from memory_profiler import profile
 import requests
 import doltcli
 from print import printWithFilename
 import static
-from utils import get_content_from_url
+from utils import get_tablename_db_and_soup, writeFileToDolt, getATagsWithHref, saveTextFromUrlToTxtFile, transformTxtFileToCsv
 
-def get_tablename_from_args():
-    args = sys.argv
-    if len(args) < 2:
-        print("table name must be provided as argument")
-        exit()
-    tableName = sys.argv[1]
-    return tableName
-
-def createTableIfDoesNotExist():
+def createTableIfDoesNotExist(tableName):
     lsOutput = db.ls()
     table_already_exists = False
     for table in lsOutput:
@@ -30,21 +21,6 @@ def createTableIfDoesNotExist():
             create_table_sql_stmt = "CREATE TABLE `absenteeism_reason` (`academic_year` longtext NOT NULL,`aggregate_level` longtext NOT NULL,`county_code` longtext NOT NULL,`district_code` int unsigned,`school_code` longtext,`county_name` longtext NOT NULL,`district_name` longtext,`school_name` longtext,`charter` longtext NOT NULL,`dass` longtext NOT NULL,`reporting_category` longtext NOT NULL,`eligible_cumulative_enrollment` longtext,`count_of_students_with_one_or_more_absences` longtext,`average_days_absent` longtext,`total_days_absent` longtext NOT NULL,`excused_absences_percent` longtext NOT NULL,`unexcused_absences_percent` longtext NOT NULL,`out_of_school_suspension_absences_percent` longtext NOT NULL,`incomplete_independent_study_absences_percent` longtext NOT NULL,`excused_absences_count` longtext NOT NULL, `unexcused_absences_count` longtext NOT NULL,`out_of_school_suspension_absences_count` longtext NOT NULL,`incomplete_independent_study_absences_count` longtext NOT NULL, PRIMARY KEY(`academic_year`, `aggregate_level`, `county_code`, `county_name`, `charter`, `dass`, `reporting_category`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         print("Creating table `{}`...".format(tableName))
         db.sql(query=create_table_sql_stmt)
-    return
-
-def getATagsWithHref(soup):
-    tableRows = soup.find_all("td")
-    asWithHref = []
-    for row in tableRows:
-        asWithHref.extend(row.find_all("a", href=True))
-    return asWithHref
-
-def saveTextFromUrlToTxtFile(txtFileUrl, txtFile):
-    lines = requests.get(txtFileUrl).text
-    printWithFilename("Writing lines from response to {}...", txtFile)
-    with open(txtFile, 'w') as f:
-        f.write(lines)
-        f.close()
     return
 
 def formatHeadersOfTxtFile(txtFile):
@@ -78,33 +54,8 @@ def mapHeaders(line):
         result = result.replace(word, static.replaceKeywords[word])
     return result
 
-def transformTxtFileToCsv(txtFile, csvFile):
-    printWithFilename("Opening {} to read from...", txtFile)
-    in_txt = csv.reader(open(txtFile, "r"),delimiter = '\t')
-
-    printWithFilename("Opening {} to write to...", csvFile)
-    out_csv = csv.writer(open(csvFile, 'w'))
-
-    printWithFilename("Writing to {}...", csvFile)
-    out_csv.writerows(in_txt)
-
-    printWithFilename("Successfully wrote csvFile", csvFile)
-
 @profile
-def writeFileToDolt(db, tableName, file_handle, import_mode, commit_msg):
-    doltcli.write_file(
-        dolt=db,
-        table=tableName,
-        file_handle=file_handle,
-        import_mode=import_mode,
-        commit=True,
-        commit_message=commit_msg,
-        continue_import_on_bad_row=True
-    )
-    return
-
-@profile
-def processURL(tableName, soup):
+def processURL(tableName, soup, db):
     count = 0
     aTagsWithHref = getATagsWithHref(soup)   
     for aTags in aTagsWithHref:
@@ -136,9 +87,6 @@ def processURL(tableName, soup):
 
     return
 
-tableName = get_tablename_from_args()
-db = doltcli.Dolt("../../dolt_repos/california-dept-of-education/")
-soup = get_content_from_url(static.table_url_map[tableName])
-print("Preparing import process for {}...".format(tableName))
-createTableIfDoesNotExist()
-processURL(tableName, soup)
+tableName, db, soup = get_tablename_db_and_soup()
+createTableIfDoesNotExist(tableName)
+processURL(tableName, soup, db)
